@@ -1,0 +1,43 @@
+<template>
+    <lightning-card title="Prompt Builder LWc Component">
+        <div class="slds-m-around_medium">
+            <div class="slds-m-botton_medium">
+                <lightning-file-upload label="Upload File" 
+                                        name="fileUpload"
+                                        accept={accptedFormats}
+                                        onuploadfinished={handleUploadFinished}>
+                </lightning-file-upload>
+
+                <template lwc:if={fileUploaded}>
+                    <div class="slds-m-top_small slds-text-color_success">
+                        <lightning-icon icon-name="utility:success"  
+                                             size="x-small"
+                                             alternative-text="Success"></lightning-icon>
+                                             File Uplaoded Successfully
+
+                    </div>
+
+                </template>
+            </div>
+        </div>
+        <div class="slds-m-bottom_medium">
+            <lightning-textarea label="Ask a Question"
+                value={askQuestions}
+                onchange={questionHandler}
+                placeholder="Enter Your Question Here...."
+                max-length="5000"></lightning-textarea>
+        </div>
+        <div class="slds-m-bottom_medium">
+            <lightning-button label="Get Answer" title="Get Answer" variant="brand" onclick={getAnswer}></lightning-button>
+        </div>
+        <div class="slds-m-top_medium">
+                 <div class="slds-text-heading_small slds-m-bottom_small">
+                     Response from Prompt:
+                 </div>
+
+                <div class="response-container"  lwc:dom="manual">
+                 </div>
+            </div>
+    </lightning-card>
+    
+</template>
