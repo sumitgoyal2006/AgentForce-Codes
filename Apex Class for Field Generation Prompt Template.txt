@@ -1,0 +1,47 @@
+public class AccountSummaryFGPTApexClass
+{
+    public class InputRequest
+    {
+        @InvocableVariable(required=true)
+        public Account RelatedEntity;
+    }
+    public class OutputResponse
+    {
+        @InvocableVariable
+        public String Prompt;
+    }
+    
+    @InvocableMethod(label='Related Case Summary'
+                     description='Method to Fetch Related Case Records'
+                     CapabilityType='PromptTemplateType://einstein_gpt__fieldCompletion')
+    public static List<OutputResponse> getRelatedCases(List<InputRequest> request)
+    {
+        String responseString=null;
+        Account acc=request[0].RelatedEntity; 
+        //Account acc=Burlington Textiles Corp of America;
+        
+        //get Related Cases
+        List<Case> caseRecords=[select CaseNumber,Status from Case where AccountId=:acc.Id];
+       
+        if(caseRecords.size()>0)
+        {
+            for(Case c:caseRecords)
+            {
+                responseString=(responseString!=null)?responseString+'\n':'';
+                responseString+=String.format('Case Number is{0} and Status={1}',new List<Object>{c.CaseNumber,c.Status});
+            }
+        }
+        else
+        {
+            responseString +='No Matching Cases available';            
+        }
+        
+        OutputResponse res=new OutputResponse();
+        res.Prompt=responseString;
+        List<OutputResponse> responseList=new List<OutputResponse>();
+        responseList.add(res);
+        return responseList;
+        
+    }
+
+}
