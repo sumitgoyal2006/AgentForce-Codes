@@ -1,0 +1,74 @@
+public with sharing class FlexTemplateFlowInvoker {
+
+     // 🔹 Input wrapper
+    public class Request {
+        @InvocableVariable(required=true)
+        public String userQuestion;
+
+        @InvocableVariable(required=true)
+        public Id fileId;
+    }
+
+    // 🔹 Output wrapper
+    public class Response {
+        @InvocableVariable
+        public String output;
+    }
+
+    @InvocableMethod(label='Invoke File QnA Template')
+    public static List<Response> invokeFromFlow(List<Request> requests) {
+
+        List<Response> responses = new List<Response>();
+
+        for (Request req : requests) {
+
+            // Wrap user question
+            ConnectApi.WrappedValue userQuestionInstance = new ConnectApi.WrappedValue();
+            userQuestionInstance.value = req.userQuestion;
+
+            // Wrap file Id
+            Map<String, String> recordMap = new Map<String, String>();
+            recordMap.put('id', String.valueOf(req.fileId));
+
+            ConnectApi.WrappedValue fileInstance = new ConnectApi.WrappedValue();
+            fileInstance.value = recordMap;
+
+            // Input params map
+            Map<String, ConnectApi.WrappedValue> inputParamsMap = new Map<String, ConnectApi.WrappedValue>();
+            inputParamsMap.put('Input:userPrompt', userQuestionInstance);
+            inputParamsMap.put('Input:inputFile', fileInstance);
+			System.debug('Input Params:'+inputParamsMap);
+            // Template input
+            ConnectApi.EinsteinPromptTemplateGenerationsInput executeTemplateInput =
+                new ConnectApi.EinsteinPromptTemplateGenerationsInput();
+
+            executeTemplateInput.additionalConfig = new ConnectApi.EinsteinLlmAdditionalConfigInput();
+            executeTemplateInput.additionalConfig.applicationName = 'PromptBuilderPreview';
+            executeTemplateInput.isPreview = false;
+            executeTemplateInput.inputParams = inputParamsMap;
+
+            try {
+                ConnectApi.EinsteinPromptTemplateGenerationsRepresentation generationsOutput =
+                    ConnectApi.EinsteinLLM.generateMessagesForPromptTemplate(
+                        'Flex_Template_to_Extract_Information_from_Image', // API Name
+                        executeTemplateInput
+                    );
+
+                ConnectApi.EinsteinLLMGenerationItemOutput responseItem =
+                    generationsOutput.generations[0];
+
+                Response res = new Response();
+                res.output = responseItem.text;
+				System.debug(res.output);
+                responses.add(res);
+
+            } catch (Exception e) {
+                Response res = new Response();
+                res.output = 'Error: ' + e.getMessage();
+                responses.add(res);
+            }
+        }
+
+        return responses;
+    }
+  }
